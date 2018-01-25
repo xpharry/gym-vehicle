@@ -1,0 +1,1 @@
+from gym_vehicle.envs.catvehicle.gazebo_catvehicle_lidar import GazeboCatvehicleLidarEnv
