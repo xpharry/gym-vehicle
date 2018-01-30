@@ -98,4 +98,5 @@ if __name__ == '__main__':
     print("Best 100 score: {:0.2f}".format(reduce(lambda x, y: x + y, l[-100:]) / len(l[-100:])))
 
     # env.monitor.close()
+    gym.wrappers.Monitor.close()
     env.close()
