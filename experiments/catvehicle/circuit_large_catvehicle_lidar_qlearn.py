@@ -22,7 +22,9 @@ def render():
 
 if __name__ == '__main__':
 
-    env = gym.make('GazeboCatvehicleLidar-v0')
+    env = gym.make('GazeboCircuitLargeCatvehicleLidar-v0')
+
+    time.sleep(1.0)  # delays for 5 seconds. You can Also Use Float Value.
 
     outdir = '/tmp/gazebo_gym_experiments'
     # env.monitor.start(outdir, force=True, seed=None)

@@ -23,15 +23,21 @@ web_base = os.environ.get('OPENAI_GYM_WEB_BASE', 'https://gym.openai.com')'''
 # groups
 
 add_group(
-    id='gazebo',
-    name='Gazebo',
+    id='gym-vehicle',
+    name='gym-vehicle',
     description='TODO.'
 )
 
 add_task(
-    id='GazeboCatvehicleLidar-v0',
-    group='gazebo',
-    summary='Test.',
+    id='GazeboCircuitLargeCatvehicleLidar-v0',
+    group='gym-vehicle',
+    summary='Test1.',
+)
+
+add_task(
+    id='GazeboCircuitLargeCatvehicleLidarNn-v0',
+    group='gym-vehicle',
+    summary='Test2.',
 )
 
 registry.finalize()

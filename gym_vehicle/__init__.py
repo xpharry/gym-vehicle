@@ -8,7 +8,12 @@ logger = logging.getLogger(__name__)
 
 # Catvehicle envs
 register(
-    id='GazeboCatvehicleLidar-v0',
-    entry_point='gym_vehicle.envs.catvehicle:GazeboCatvehicleLidarEnv',
+    id='GazeboCircuitLargeCatvehicleLidar-v0',
+    entry_point='gym_vehicle.envs.catvehicle:GazeboCircuitLargeCatvehicleLidarEnv',
+    # More arguments here
+)
+register(
+    id='GazeboCircuitLargeCatvehicleLidarNn-v0',
+    entry_point='gym_vehicle.envs.catvehicle:GazeboCircuitLargeCatvehicleLidarNnEnv',
     # More arguments here
 )
