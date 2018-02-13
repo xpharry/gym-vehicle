@@ -30,6 +30,7 @@ class GazeboTrackCatvehicleLidarNnEnv(gazebo_env.GazeboEnv):
         gazebo_env.GazeboEnv.__init__(self, "GazeboTrackCatvehicleLidar_v0.launch")
 
         self.speed = 0
+        self.path_dist = 0
         self.travel_dist = 0
         self.prev_pose = Pose()
         self.pose = Pose()
@@ -135,8 +136,8 @@ class GazeboTrackCatvehicleLidarNnEnv(gazebo_env.GazeboEnv):
             # point i
             pose = Pose()
             phi = self.min_dang(phi0 + 2.0 * math.pi / medges * i)
-            pose.position.x = ra * math.cos(phi) + ra
-            pose.position.y = ra * math.sin(phi) + ra
+            pose.position.x = ra * math.cos(phi) - ra
+            pose.position.y = ra * math.sin(phi) - ra
             pose.position.z = 0.0
 
             theta = self.min_dang(phi + math.pi / 2.0)
@@ -145,6 +146,8 @@ class GazeboTrackCatvehicleLidarNnEnv(gazebo_env.GazeboEnv):
 
             path.append(pose)
 
+        print("=============== Status Bar ==================")
+        print("path generated! length = %d" % len(path))
         return path
 
     def compute_dist(self, a, b):
@@ -156,10 +159,12 @@ class GazeboTrackCatvehicleLidarNnEnv(gazebo_env.GazeboEnv):
 
     def find_index(self, p, path):
         min_dist = 100000.0
+        idx = 0
         for i in range(len(path)):
             dist = self.compute_dist(p, path[i])
             # print(path[i].position.x, path[i].position.y)
             if dist < min_dist:
+                # print("found index = %d" % i)
                 idx = i
                 min_dist = dist
         return idx
@@ -195,18 +200,20 @@ class GazeboTrackCatvehicleLidarNnEnv(gazebo_env.GazeboEnv):
         v2 = data.twist[imodel2].linear.x
         path = self.generate_track_path()
 
-        min_dist = 10.0
+        min_dist = 4.0
         done = False
-        path_dist = self.calculate_track_dist(p1, p2, path)
-        print("path dist = %f " % path_dist)
+        self.path_dist = self.calculate_track_dist(p1, p2, path)
+        print("path dist = %f " % self.path_dist)
 
-        if path_dist < min_dist:
+        if self.path_dist < min_dist:
+            print("Collision detected!")
             done = True
 
         if self.pose.position.z > 0.5:
+            print("The car is turned over!")
             done = True
 
-        state = [path_dist, v1 - v2]
+        state = [self.path_dist, v1 - v2]
         return state, done
 
     def _seed(self, seed=None):
@@ -285,7 +292,7 @@ class GazeboTrackCatvehicleLidarNnEnv(gazebo_env.GazeboEnv):
         # else:
         #     reward = -200
 
-        # 3 actions
+        # 7 actions
         # stay current velocity reward = 5, change velocity reward = 0.5
         if not done:
             if action == 0:  # stay current speed
@@ -300,20 +307,34 @@ class GazeboTrackCatvehicleLidarNnEnv(gazebo_env.GazeboEnv):
                 reward = 5
             elif action == 5:
                 reward = 0
-            elif action == 6:
+            else:
                 reward = -5
         else:
-            reward = -20000
+            reward = -10000
             self.travel_dist = 0
 
         acc_dist = self.compute_dist(self.prev_pose, self.pose)
         self.travel_dist += acc_dist
         self.prev_pose = self.pose
 
-        reward += cmd_speed * 0.5
+        # by speed and relative speed
+        if cmd_speed > MAX_SPEED*0.8:
+            speed_reward = -15 * (cmd_speed - MAX_SPEED*0.8)
+        else:
+            speed_reward = -5 * (MAX_SPEED*0.8 - cmd_speed)
+        reward -= speed_reward
 
-        if self.travel_dist >= 376.248:
-            reward = 20000
+        # by path dist
+        path_dist_reward = 12.5
+        if self.path_dist < 40:
+            path_dist_reward = 100 * math.pow((self.path_dist - 20) / 40, 3)
+        reward += path_dist_reward
+
+        # by acc_dist
+        reward += 10 * acc_dist
+
+        if self.travel_dist >= 376:
+            print("Safely finishing! :D")
             done = True
             self.travel_dist = 0
 
